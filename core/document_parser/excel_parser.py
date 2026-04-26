@@ -12,8 +12,10 @@ class ExcelParser(BaseParser[list[Cadet]]):
     def parse(self, file_bytes: bytes) -> list[Cadet]:
         try:
             df = pd.read_excel(BytesIO(file_bytes))
-        except pd.errors.ParserError as error:
+        except (pd.errors.ParserError, ValueError) as error:
             raise FileParsingError(f"Failed to parse Excel file: {error}")
+        except Exception as error:
+            raise FileParsingError(f"Unexpected Excel parsing error: {error}")
 
         cadets = []
         for _, row in df.iterrows():
@@ -22,13 +24,21 @@ class ExcelParser(BaseParser[list[Cadet]]):
                 continue
             
             if self.name_column not in row_dict:
-                 continue
+                continue
 
-            name = str(row_dict.pop(self.name_column)).strip()
-            if not name:
+            raw_name = row_dict.pop(self.name_column)
+            if pd.isna(raw_name):
+                continue
+
+            name = str(raw_name).strip()
+            if not name or name.lower() == "nan":
                 continue
             
-            answers = {str(k): str(v).strip() for k, v in row_dict.items()}
+            answers = {
+                str(key): str(value).strip()
+                for key, value in row_dict.items()
+                if not pd.isna(value) and str(value).strip()
+            }
             cadets.append(Cadet(name=name, interview_answers=answers))
             
         return cadets

@@ -127,7 +127,7 @@ class ChatInterface:
 
             def on_chunk(chunk: str):
                 partial_chunks.append(chunk)
-                stream_placeholder.markdown("".join(partial_chunks), unsafe_allow_html=True)
+                stream_placeholder.markdown("".join(partial_chunks))
 
             assistant_response, history = await self.llm_service.generate_chat_response_stream(
                 st.session_state.chat_history,
@@ -139,16 +139,16 @@ class ChatInterface:
             )
 
             if not partial_chunks:
-                stream_placeholder.markdown(assistant_response, unsafe_allow_html=True)
+                stream_placeholder.markdown(assistant_response)
 
         st.session_state.chat_history = history
         return decision.is_draft_needed, assistant_response
     
     @staticmethod
     def _display_answer(content: str):
-        st.markdown(content, unsafe_allow_html=True)
+        st.markdown(content)
     
     @staticmethod
     def _display_drafts(drafts: dict[str, str]):
         for cadet_name, draft_content in drafts.items():
-            st.markdown(draft_content, unsafe_allow_html=True)
+            st.markdown(draft_content)

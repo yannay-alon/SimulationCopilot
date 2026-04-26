@@ -1,14 +1,16 @@
-import os
 from pathlib import Path
 
 from models.state_models import AppContext
 
+
 class StorageManager:
-    STORAGE_FILE = Path("storage/context_storage.json")
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    STORAGE_FILE = PROJECT_ROOT / "storage" / "context_storage.json"
 
     @classmethod
     def save_context(cls, context: AppContext) -> None:
         try:
+            cls.STORAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
             with cls.STORAGE_FILE.open("w", encoding="utf-8") as file:
                 file.write(context.model_dump_json(indent=4))
         except Exception as error:
@@ -16,7 +18,7 @@ class StorageManager:
 
     @classmethod
     def load_context(cls) -> AppContext:
-        if os.path.exists(cls.STORAGE_FILE):
+        if cls.STORAGE_FILE.exists():
             try:
                 with cls.STORAGE_FILE.open("r", encoding="utf-8") as file:
                     data = file.read()

@@ -7,13 +7,15 @@ from utils.exceptions import FileParsingError
 
 class DocumentParserFactory:
     @staticmethod
-    def get_parser(filename: Path, *args, **kwargs) -> BaseParser:
-        match filename.suffix:
+    def get_parser(filename: Path, name_column: str | None = None) -> BaseParser:
+        match filename.suffix.lower():
             case '.xlsx':
-                return ExcelParser(*args, **kwargs)
+                if name_column is None:
+                    raise FileParsingError("name_column is required for Excel interview files")
+                return ExcelParser(name_column=name_column)
             case '.docx':
-                return WordParser(*args, **kwargs)
+                return WordParser()
             case '.pdf':
-                return PDFParser(*args, **kwargs)
+                return PDFParser()
             case _:
                 raise FileParsingError(f"Unsupported document format: {filename}")

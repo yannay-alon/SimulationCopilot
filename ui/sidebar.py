@@ -82,8 +82,10 @@ class SidebarComponent:
             # Default model handling
             default_model = os.environ.get("MODEL_NAME", "").lower()
             default_model_index = 0
-            if default_model in option_models:
-                default_model_index = option_models.index(default_model)
+            if default_model:
+                model_ids = [model_id.lower() for model_id in available_models_dict.values()]
+                if default_model in model_ids:
+                    default_model_index = model_ids.index(default_model)
             selected_model = st.selectbox("Select LLM Model", option_models, index=default_model_index)
             
             st.write("---")

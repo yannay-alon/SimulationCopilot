@@ -57,8 +57,8 @@ class LLMService:
             formatted_past_simulations = f"Past Simulations (for style and quality reference):\n{past_simulations}\n"
 
         cadets_information = "\n".join([
-            f"Name: {c.name}\nAnswers: {json.dumps(c.interview_answers, ensure_ascii=False)}"
-            for c in selected_cadets
+            f"Name: {cadet.name}\nAnswers: {json.dumps(cadet.interview_answers, ensure_ascii=False)}"
+            for cadet in selected_cadets
         ])
 
         instruction = BASE_SYSTEM_INSTRUCTION.format(
@@ -124,8 +124,6 @@ class LLMService:
                 if attempt_index == len(models_to_try) - 1:
                     raise e
                 continue
-            except Exception as e:
-                raise e
 
             if is_structured and structured_output is not None:
                 if not response.parsed:
@@ -182,8 +180,6 @@ class LLMService:
                 if emitted_text or attempt_index == len(models_to_try) - 1:
                     raise e
                 continue
-            except Exception as e:
-                raise e
 
             full_text = "".join(collected_chunks)
             if full_text.strip() or final_content is not None:

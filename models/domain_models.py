@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, ValidationInfo, ValidationError
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 
 
 class Cadet(BaseModel):
@@ -49,28 +49,26 @@ class SimulationOutput(BaseModel):
     practical_tools: list[str] = Field(
         description="Practical tools or thumb-rules that can be learnt from the simulation (if any)")
 
-    @field_validator("simulated_cadet_brief")
+    @field_validator("simulated_cadet_brief", mode="after")
     @classmethod
     def simulated_cadet_brief_required_if_not_eruptive(
             cls, value: SimulatedBrief | None,
             info: ValidationInfo
     ) -> SimulatedBrief | None:
-        if info.data['simulation_type'].lower() == "eruptive":
+        simulation_type = info.data.get("simulation_type", "").lower()
+        if simulation_type == "eruptive":
             return None
         if value is None:
-            raise ValidationError("simulated_cadet_brief is required for non-eruptive simulations")
+            raise ValueError("simulated_cadet_brief is required for non-eruptive simulations")
         return value
     
     def get_simulation_type_display_name(self) -> str:
-        match self.simulation_type:
-            case "Formal":
-                return "סימולציה פורמלית"
-            case "Eruptive":
-                return "סימולציה מתפרצת"
-            case "Personal":
-                return "סימולציה אישית"
-            case _:
-                raise ValueError(f"Unknown simulation type: {self.simulation_type}")
+        display_names = {
+            "Formal": "סימולציה פורמלית",
+            "Eruptive": "סימולציה מתפרצת",
+            "Personal": "סימולציה אישית",
+        }
+        return display_names[self.simulation_type]
 
 class MultipleSimulations(BaseModel):
     simulations: dict[str, SimulationOutput] = Field(
@@ -83,6 +81,6 @@ class AgentDecision(BaseModel):
         description="Whether the user is ready and requesting to generate or update the full simulation draft. Set to False if the user is just brainstorming, discussing ideas, or if you need to ask clarifying questions."
     )
     next_step_directions: str = Field(
-        default=False,
+        default="",
         description="When a draft is not needed, write directions for the follow-up AI agent what should be done - asking clarification questions, discussing ideas, etc."
     )
