@@ -7,6 +7,7 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 from core.document_parser.parser_factory import DocumentParserFactory
 from models.domain_models import PastSimulation
 from ui.state_manager import SessionState
+from ui.interview_editor import InterviewEditor
 from utils.exceptions import FileParsingError
 from utils.exceptions import NonTextPDFError
 
@@ -56,6 +57,11 @@ def add_example_simulations_dialog():
                 context.past_simulations.append(PastSimulation(filename=file.name, content=content, score=scores[file.name]))
             SessionState.update_context(context)
             st.rerun()
+
+@st.dialog("Edit Interviews")
+def edit_interviews_dialog():
+    InterviewEditor.render()
+
 
 class SidebarComponent:
     MAX_CONTEXT_SAMPLE_LENGTH = 25
@@ -126,8 +132,15 @@ class SidebarComponent:
             interviews_label = "Upload Interviews (.xlsx)"
             if context.cadets:
                 interviews_label += f" ✅ (Loaded {len(context.cadets)} cadets)"
-                
-            interview_file = st.file_uploader(interviews_label, type=["xlsx"])
+            
+            col1, col2 = st.columns([0.7, 0.3])
+            with col1:
+                interview_file = st.file_uploader(interviews_label, type=["xlsx"], label_visibility="collapsed")
+            with col2:
+                if context.cadets:
+                    if st.button("Edit", key="edit_interviews"):
+                        edit_interviews_dialog()
+
             name_column = st.text_input("Name column", value=context.name_column)
             
             if name_column != context.name_column:
@@ -140,6 +153,7 @@ class SidebarComponent:
                     context.cadets = parser.parse(interview_file.read())
                     SessionState.update_context(context)
                     st.success(f"Loaded {len(context.cadets)} cadets.")
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error: {e}")
 

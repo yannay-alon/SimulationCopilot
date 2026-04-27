@@ -17,6 +17,11 @@ class ExcelParser(BaseParser[list[Cadet]]):
         except Exception as error:
             raise FileParsingError(f"Unexpected Excel parsing error: {error}")
 
+        # Ensure order is preserved from pandas reading
+        original_columns = list(df.columns)
+        if self.name_column in original_columns:
+            original_columns.remove(self.name_column)
+
         cadets = []
         for _, row in df.iterrows():
             row_dict = row.to_dict()
@@ -34,11 +39,14 @@ class ExcelParser(BaseParser[list[Cadet]]):
             if not name or name.lower() == "nan":
                 continue
             
-            answers = {
-                str(key): str(value).strip()
-                for key, value in row_dict.items()
-                if not pd.isna(value) and str(value).strip()
-            }
+            # Maintain the original order defined by the excel file
+            answers = {}
+            for col in original_columns:
+                if col in row_dict:
+                    val = row_dict[col]
+                    if not pd.isna(val) and str(val).strip():
+                        answers[str(col)] = str(val).strip()
+
             cadets.append(Cadet(name=name, interview_answers=answers))
             
         return cadets
